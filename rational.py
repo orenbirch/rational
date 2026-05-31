@@ -11,6 +11,17 @@ from math import gcd
 class Rational:
     """A class representing a rational number."""
     def __init__(self, numerator, denominator):
+        if denominator == 0:
+            raise ZeroDivisionError("Denominator cannot be zero")
+
+        # Keep a canonical representation so equality, hashing, and display are consistent.
+        common = gcd(numerator, denominator)
+        numerator //= common
+        denominator //= common
+        if denominator < 0:
+            numerator = -numerator
+            denominator = -denominator
+
         self.numerator = numerator
         self.denominator = denominator
 
@@ -48,6 +59,8 @@ class Rational:
     def __truediv__(self, other):
         """Divide two rational numbers."""
         if isinstance(other, Rational):
+            if other.numerator == 0:
+                raise ZeroDivisionError("Cannot divide by zero")
             new_numerator = self.numerator * other.denominator
             new_denominator = self.denominator * other.numerator
             return Rational(new_numerator, new_denominator)
@@ -57,6 +70,8 @@ class Rational:
     def __pow__(self, exponent):
         """Raise the rational number to a power."""
         if isinstance(exponent, int):
+            if exponent < 0 and self.numerator == 0:
+                raise ZeroDivisionError("0 cannot be raised to a negative power")
             new_numerator = self.numerator ** exponent
             new_denominator = self.denominator ** exponent
             return Rational(new_numerator, new_denominator)
@@ -68,35 +83,35 @@ class Rational:
         if isinstance(other, Rational):
             return self.numerator * other.denominator == self.denominator * other.numerator
         else:
-            raise TypeError("Unsupported type for equality check")
+            return NotImplemented
         
     def __lt__(self, other):
         """Check if this rational number is less than another."""
         if isinstance(other, Rational):
             return self.numerator * other.denominator < self.denominator * other.numerator
         else:
-            raise TypeError("Unsupported type for comparison")
+            return NotImplemented
         
     def __le__(self, other):
         """Check if this rational number is less than or equal to another."""
         if isinstance(other, Rational):
             return self.numerator * other.denominator <= self.denominator * other.numerator
         else:
-            raise TypeError("Unsupported type for comparison")
+            return NotImplemented
         
     def __gt__(self, other):
         """Check if this rational number is greater than another."""
         if isinstance(other, Rational):
             return self.numerator * other.denominator > self.denominator * other.numerator
         else:
-            raise TypeError("Unsupported type for comparison")
+            return NotImplemented
         
     def __ge__(self, other):
         """Check if this rational number is greater than or equal to another."""
         if isinstance(other, Rational):
             return self.numerator * other.denominator >= self.denominator * other.numerator
         else:
-            raise TypeError("Unsupported type for comparison")
+            return NotImplemented
         
     def __neg__(self):
         """Return the negation of the rational number."""
@@ -112,7 +127,7 @@ class Rational:
     
     def __abs__(self):
         """Return the absolute value of the rational number."""
-        return Rational(abs(self.numerator), abs(self.denominator))
+        return Rational(abs(self.numerator), self.denominator)
     
     def __hash__(self):
         """Return a hash value for the rational number."""
@@ -131,7 +146,11 @@ class Rational:
         return Rational(self.numerator, self.denominator)
         
     def __reduce__(self):
-        """Simplify the rational number."""     
+        """Return pickling instructions for this object."""
+        return (self.__class__, (self.numerator, self.denominator))
+    
+
+    def simplify(self):
+        """Return a simplified version of the rational number."""
         common = gcd(self.numerator, self.denominator)
-        self.numerator //= common
-        self.denominator //= common
+        return Rational(self.numerator // common, self.denominator // common)
